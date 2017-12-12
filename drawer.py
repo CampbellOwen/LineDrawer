@@ -20,7 +20,6 @@ class Drawer:
     
     @staticmethod
     def to_octant_zero( octant, pt ):
-        print( octant )
         if octant == 0:
             return pt
         elif octant == 1:
@@ -57,6 +56,21 @@ class Drawer:
         elif octant == 7:
             return ( pt[0], -pt[1] )
 
+    @staticmethod
+    def subtract_tuple( t1, t2 ):
+        return [ (lambda x, y: y - x)( x, y ) for (x, y) in zip( t1, t2 ) ]
+
+
+    @staticmethod
+    def se( p1, p2 ):
+        subbed = Drawer.subtract_tuple( p1, p2 )
+        return sum( [ x**2 for x in subbed ] ) / len( subbed )
+
+    @staticmethod
+    def draw_points( out_img, pixels, colour ):
+        for px in pixels:
+            out_img.putpixel( px, colour )
+
 
     def draw_and_compare_line( self, cmp_img, out_img, start, end, colour ):
         pixels = [ ]
@@ -64,8 +78,8 @@ class Drawer:
         start = self.to_octant_zero( octant, start )
         end = self.to_octant_zero( octant, end )
 
-        print( start )
-        print( end )
+        orig_error = 0
+        new_error = 0
 
         # Bresenham
         x = start[ 0 ]
@@ -76,13 +90,21 @@ class Drawer:
 
         error = m_num - y_den
 
+        count = 0
         while x <= end[ 0 ]:
+            count += 1
             # set x, y_int, colour
             # check error
-            print( (x, y_int ) )
             coord = self.octant_zero_to( octant, ( x, y_int ) )
-            out_img.putpixel( coord, colour )
-            pixels.append( ( coord, colour ) )
+            
+            base_colour = cmp_img.getpixel( coord )
+            prev_colour = out_img.getpixel( coord )
+
+            orig_error += self.se( base_colour, prev_colour )
+            new_error += self.se( base_colour, colour )
+
+
+            pixels.append( coord )
 
             x += 1
             if y_num + error >= 0:
@@ -91,11 +113,14 @@ class Drawer:
             else:
                 y_num += m_num
 
-        #print( pixels )
+        orig_error /= count
+        new_error /= count
+
+        if new_error < orig_error:
+            self.draw_points( out_img, pixels, colour )
 
     def draw( self, outpath, iterations ):
         colours = self.img.getcolors( 100000 )
-        print( ( self.img.width, self.img.height ) ) 
 
         for i in range( iterations ):
             colour = colours[ random.randint( 0, len( colours ) -1 ) ][ 1 ]
@@ -109,9 +134,9 @@ class Drawer:
             start = ( start_x, start_y )
             end = ( end_x, end_y )
 
-            print( "start: {0}, end {1}".format( start, end ) )
-
             self.draw_and_compare_line( self.img, self.canvas, start, end, colour )
+            if i % int( iterations / 20 ) == 0:
+                print( "{0}%".format(  ( i / iterations ) * 100 ) )
 
         self.canvas.save( outpath )
 
