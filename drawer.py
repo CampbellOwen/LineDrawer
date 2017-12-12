@@ -119,11 +119,41 @@ class Drawer:
         if new_error < orig_error:
             self.draw_points( out_img, pixels, colour )
 
+    @staticmethod
+    def get_colours_with_freq( img ):
+        colours = {}
+        for x in range( img.width ):
+            for y in range( img.height ):
+                colour = img.getpixel( ( x, y ) )
+                if colour in colours:
+                   colours[ colour ] += 1
+                else:
+                    colours[ colour ] = 1
+
+        num_pixels = img.width * img.height
+        for key in colours:
+            colours[ key ] /= num_pixels 
+
+        return colours 
+
+    @staticmethod
+    def weighted_random_by_dct(dct):
+        rand_val = random.random()
+        total = 0
+        for k, v in dct.items():
+            total += v
+            if rand_val <= total:
+                return k
+        assert False, 'unreachable'
+
     def draw( self, outpath, iterations ):
-        colours = self.img.getcolors( 100000 )
+        #colours = self.img.getcolors( 100000 )
+        colours = self.get_colours_with_freq( self.img )
 
         for i in range( iterations ):
-            colour = colours[ random.randint( 0, len( colours ) -1 ) ][ 1 ]
+            #colour = colours[ random.randint( 0, len( colours ) -1 ) ][ 1 ]
+            #colour = random.choice([key for key, values in colours.iteritems() for x in values])
+            colour = self.weighted_random_by_dct( colours )
             
             start_x = random.randint( 0, self.img.width - 1 )
             start_y = random.randint( 0, self.img.height - 1 )
