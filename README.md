@@ -3,7 +3,7 @@ Recreate images with only lines
 
 ## Usage
 
-python path_to_reference_image path_to_output_image num_iterations
+`python path_to_reference_image path_to_output_image num_iterations`
 
 The number of iterations is the number of lines tested on the image, not the total amount of lines in the output image.
 
